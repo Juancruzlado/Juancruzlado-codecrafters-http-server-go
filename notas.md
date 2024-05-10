@@ -1,0 +1,1 @@
+Documentar todo, seguir estructura del codecrafters pero mandarle mecha SIN IA y con mucho craneo 
