@@ -38,9 +38,9 @@ func main(){
 
         conn, err := l.Accept()
         if err != nil {
-			fmt.Println("Failed to accept incoming client connection", err.Error())
-			os.Exit(1)
+                fmt.Println("Failed to accept incoming client connection", err.Error())
+                os.Exit(1)
         }
 	HandleRequest(conn)
-
+        // agregarle logica de si mandan a ruta echo un string asi /echo/unstring que devuelva un body con el string enviado
 }
