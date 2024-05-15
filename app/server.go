@@ -55,10 +55,13 @@ func main(){
                 os.Exit(1)
         }
  
+        for {
         conn, err := l.Accept()
-        if err != nil {
-                fmt.Println("Failed to accept incoming client connection", err.Error())
-                os.Exit(1)
+                if err != nil {
+                        fmt.Println("Error accepting connection: ", err.Error())
+                        os.Exit(1)
+                }
+        go handleRequest(conn)
         }
         HandleRequest(conn)
 }
