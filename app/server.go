@@ -62,6 +62,5 @@ func main(){
 		}
 		go HandleRequest(conn)
         }
-        HandleRequest(conn)
 }
         
