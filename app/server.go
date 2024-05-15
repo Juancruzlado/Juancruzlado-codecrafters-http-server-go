@@ -23,6 +23,7 @@ if err != nil {
 }
 httpRequest := strings.Split(string(buffer), "\r\n")
 startLine := strings.Split(httpRequest[0], " ")
+requestHeaders := httpRequest[1:]
 path := strings.ReplaceAll(startLine[1], " ", "")
 
 fmt.Printf("path: `%s`\n", path)
@@ -31,7 +32,13 @@ fmt.Printf("path: `%s`\n", path)
                 return
         } else if strings.HasPrefix(path, "/echo/") {
 		responseEcho(conn, path)
-	} 
+	}  else if path == "/user-agent" {
+		for _, header := range requestHeaders {
+			if strings.HasPrefix(header, "User-Agent:") {
+				responseEcho(conn, header[12:])
+			}
+		}
+        }
         fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
 }
 
