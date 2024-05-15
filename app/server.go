@@ -7,6 +7,12 @@ import(
         "os"
 )
 
+func responseEcho(conn net.Conn, path string) {
+	msg := strings.Split(path, "/")[2]
+	resp := "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
+	conn.Write([]byte(resp))
+}
+
 func HandleRequest(conn net.Conn) {
 defer conn.Close()
 
@@ -20,12 +26,13 @@ startLine := strings.Split(httpRequest[0], " ")
 path := strings.ReplaceAll(startLine[1], " ", "")
 
 fmt.Printf("path: `%s`\n", path)
-if path == "/" {
-        fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\n\r\n")
-        return
-}
-
-fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
+        if path == "/" {
+                fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\n\r\n")
+                return
+        } else if strings.HasPrefix(path, "/echo/") {
+		responseEcho(conn, path)
+	} 
+        fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
 }
 
 func main(){
