@@ -6,7 +6,12 @@ import(
         "strings"
         "os"
 )
- 
+
+type Config struct {
+	port      int
+	directory string
+}
+
 func responseEcho(conn net.Conn, path string) {
         msg := strings.Split(path, "/")[2]
         resp := "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
@@ -15,7 +20,6 @@ func responseEcho(conn net.Conn, path string) {
  
 func responseUserAgent(conn net.Conn, content string) {
         lines := strings.Split(content, "\r\n")
-        fmt.Println("lines here", len(lines), lines)
         userAgent := strings.Split(lines[2], ": ")[1]
         resp := "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(userAgent)) + "\r\n\r\n" + userAgent
         conn.Write([]byte(resp))
@@ -25,29 +29,46 @@ func HandleRequest(conn net.Conn) {
 defer conn.Close()
  
 buffer := make([]byte, 1024)
- 
 contentLength, err := conn.Read(buffer)
 if err != nil {
         fmt.Fprintf(conn, "HTTP/1.1 500 Internal Server Error\r\n\r\n")
 }
+
 content := string(buffer[:contentLength])
 httpRequest := strings.Split(string(buffer), "\r\n")
 startLine := strings.Split(httpRequest[0], " ")
-path := strings.ReplaceAll(startLine[1], " ", "")
- 
-fmt.Printf("path: `%s`\n", path)
-        // Stage 3 si el path es / devuelve 200 OK 
-        if path == "/" {
-                fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\n\r\n")
-                return
-        } else if strings.HasPrefix(path, "/echo/") {
-                // Stage 4 si el path empieza con /echo/ entonces devuelve el string 
-                responseEcho(conn, path)
-        } else if path == "/user-agent" {
-                // Stage 5 si es user agent devuelve el header 
-                responseUserAgent(conn, content)
-        }
-        fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
+path := strings.ReplaceAll(startLine[1], " ", "") 
+// Stage 3 si el path es / devuelve 200 OK 
+if path == "/" {
+        fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\n\r\n")
+        return
+} else if strings.HasPrefix(path, "/echo/") {
+        // Stage 4 si el path empieza con /echo/ entonces devuelve el string 
+        responseEcho(conn, path)
+} else if path == "/user-agent" {
+        // Stage 5 si es user agent devuelve el header 
+        responseUserAgent(conn, content)
+}  else if strings.HasPrefix(path, "/files/") {
+        // Stage 7 GET file 
+		fileName, _ := strings.CutPrefix(path, "/files/")
+		filePath := fmt.Sprintf("%s/%s", cfg.directory, fileName)
+		if _, err := os.Stat(filePath); err == nil {
+			fileContent, err := os.ReadFile(filePath)
+			if err != nil {
+                                fmt.Fprintf(conn, "HTTP/1.1 500 Internal Server Error\r\n\r\n")
+			} else {
+                                resp := "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + fmt.Sprint(len(fileContent)) + "\r\n\r\n"
+                                conn.Write([]byte(resp))
+			}
+		} else {
+			fmt.Printf("File %s does not exist\n", filePath)
+                        fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
+		}
+	}
+	conn.Write([]byte(response.String()))
+	conn.Close()
+        
+fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
 }
  
 func main(){
