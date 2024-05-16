@@ -1,6 +1,7 @@
 package main
 
 import(
+        "flag"
         "fmt"
         "net"
         "strings"
@@ -25,7 +26,7 @@ func responseUserAgent(conn net.Conn, content string) {
         conn.Write([]byte(resp))
 }
  
-func HandleRequest(conn net.Conn) {
+func HandleRequest(cfg Config, conn net.Conn) {
 defer conn.Close()
  
 buffer := make([]byte, 1024)
@@ -79,6 +80,12 @@ func main(){
                 fmt.Println("Failed to bind to port 4221 to enable listening", err.Error())
                 os.Exit(1)
         }
+
+        var cfg Config
+	flag.IntVar(&cfg.port, "port", 4221, "TCP server port")
+	flag.StringVar(&cfg.directory, "directory", "", "Directory to serve files from")
+        flag.Parse()
+
         // Stage 6 Hacerlo concurrente para multiples conexiones al mismo tiempo
 	for {
 		conn, err := l.Accept()
@@ -86,7 +93,7 @@ func main(){
 			fmt.Println("Error accepting connection: ", err.Error())
 			os.Exit(1)
 		}
-		go HandleRequest(conn)
+		go HandleRequest(cfg, conn)
         }
         // stage 2 estaba aca, pero se saca el http 200 ok response
 }
