@@ -66,10 +66,10 @@ if path == "/" {
                         fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
 		}
 	}
-	conn.Write([]byte(response.String()))
-	conn.Close()
+	// conn.Write([]byte(response.String()))
         
-fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
+        fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
+	conn.Close()
 }
  
 func main(){
