@@ -58,10 +58,7 @@ func HandleRequest(conn net.Conn, directory *string) {
 	httpRequest := strings.Split(string(buffer), "\r\n")
 	startLine := strings.Split(httpRequest[0], " ")
 	path := strings.ReplaceAll(startLine[1], " ", "")
-
-	lines := strings.Split(content, "\r\n")
-	words := strings.Split(lines[0], " ")
-	target := words[1]
+	target := startLine[1]
 	req_parts := strings.Split(target, "/")
 	// Stage 3 si el path es / devuelve 200 OK
 	if path == "/" {
@@ -78,7 +75,6 @@ func HandleRequest(conn net.Conn, directory *string) {
 		response := ([]byte("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + fmt.Sprint(len(file_contents)) + "\r\n\r\n" + file_contents))
 		conn.Write(response)
 	}
-	// conn.Write([]byte(response.String()))
 
 	fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
 	conn.Close()
