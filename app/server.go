@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"io/ioutil" 
 )
 
 func main() {
@@ -49,7 +50,10 @@ func handleRequest(conn net.Conn, directory string) {
 	}
 
 	method, path := startLine[0], startLine[1]
-	if method != "GET" {
+	if method == "POST" && strings.HasPrefix(path, "/files/") { // Added to handle POST /files/<filename>
+		handleFileUpload(conn, directory, path, buffer[contentLength:]) // Added to handle file upload
+		return
+	} else if method != "GET" {
 		writeResponse(conn, "405 Method Not Allowed", "text/plain", "Method Not Allowed")
 		return
 	}
@@ -104,6 +108,20 @@ func handleFileRequest(conn net.Conn, directory, path string) {
 	}
 
 	writeResponse(conn, "200 OK", "application/octet-stream", string(content))
+}
+
+func handleFileUpload(conn net.Conn, directory, path string, body []byte) {
+	filename := strings.TrimPrefix(path, "/files/")
+	filePath := directory + "/" + filename
+
+	err := ioutil.WriteFile(filePath, body, 0644)
+	if err != nil {
+		fmt.Printf("Error writing file %s: %v\n", filePath, err)
+		writeResponse(conn, "500 Internal Server Error", "text/plain", "Internal Server Error")
+		return
+	}
+
+	writeResponse(conn, "201 Created", "text/plain", "File created")
 }
 
 func fileExists(filePath string) bool {
