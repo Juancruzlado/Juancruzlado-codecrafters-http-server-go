@@ -6,7 +6,8 @@ import (
 	"net"
 	"os"
 	"strings"
-	"io/ioutil" 
+	"io/ioutil"
+	"strconv"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 func handleRequest(conn net.Conn, directory string) {
 	defer conn.Close()
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 4096) // Increased buffer size to handle larger requests
 	contentLength, err := conn.Read(buffer)
 	if err != nil {
 		writeResponse(conn, "500 Internal Server Error", "text/plain", "Internal Server Error")
@@ -50,8 +51,8 @@ func handleRequest(conn net.Conn, directory string) {
 	}
 
 	method, path := startLine[0], startLine[1]
-	if method == "POST" && strings.HasPrefix(path, "/files/") { // Added to handle POST /files/<filename>
-		handleFileUpload(conn, directory, path, buffer[contentLength:]) // Added to handle file upload
+	if method == "POST" && strings.HasPrefix(path, "/files/") {
+		handleFileUpload(conn, directory, path, requestLines, buffer[contentLength:])
 		return
 	} else if method != "GET" {
 		writeResponse(conn, "405 Method Not Allowed", "text/plain", "Method Not Allowed")
@@ -110,9 +111,33 @@ func handleFileRequest(conn net.Conn, directory, path string) {
 	writeResponse(conn, "200 OK", "application/octet-stream", string(content))
 }
 
-func handleFileUpload(conn net.Conn, directory, path string, body []byte) {
+// Added to handle file upload
+func handleFileUpload(conn net.Conn, directory, path string, requestLines []string, body []byte) {
 	filename := strings.TrimPrefix(path, "/files/")
 	filePath := directory + "/" + filename
+
+	// Find Content-Length header to determine the body length
+	var contentLength int
+	for _, line := range requestLines {
+		if strings.HasPrefix(line, "Content-Length:") {
+			lengthStr := strings.TrimSpace(strings.TrimPrefix(line, "Content-Length:"))
+			var err error
+			contentLength, err = strconv.Atoi(lengthStr)
+			if err != nil {
+				writeResponse(conn, "400 Bad Request", "text/plain", "Invalid Content-Length")
+				return
+			}
+			break
+		}
+	}
+
+	if contentLength == 0 {
+		writeResponse(conn, "400 Bad Request", "text/plain", "Content-Length required")
+		return
+	}
+
+	// Read the body
+	body = body[:contentLength]
 
 	err := ioutil.WriteFile(filePath, body, 0644)
 	if err != nil {
