@@ -9,7 +9,21 @@ Why Traditional, because it is based on [RFC 2616 HTTP/1.1](https://datatracker.
 - Server for 
 - HTTP is pretty self-explanatory. 
 
-# Why? How?
-
+# Why?
 It's built as a hobby project also to try out codecrafters platform.  
-It's built entirely in the Go Language.
+# How?
+It's built entirely in the Go Language. You can run it with:
+```bash
+go run trash.go
+``` 
+
+- It listens in Port 4221 for TCP connection with the client
+- It can function as an 200 ok page if you curl the main page like this:
+```bash
+curl -i localhost:4221/
+```
+- It returns you your own string that you send via url if you curl this route: localhost:4221/echo/hello - in this example i pick the word hello, use whichever you want.
+- It returns your User-Agent if you go to localhost:4221/user-agent
+- It can handle concurrent connections with the use of goroutines
+- You can GET a file from directory with curl -i localhost:4221/ --directory
+- You can POST a file [- To DO -]
