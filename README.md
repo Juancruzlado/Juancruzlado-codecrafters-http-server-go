@@ -4,12 +4,12 @@
 
 - Trash stands for Traditional Raw Amateur Server for HTTP
 Why Traditional, because it is based on [RFC 2616 HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616)
-Raw because it's not looking to be perfect and is full of things to work on and improve
-Amateur because it's my first HTTP Server ever :) 
-Server for HTTP is pretty self-explanatory. 
+- Raw because it's not looking to be perfect and is full of things to work on and improve
+- Amateur because it's my first HTTP Server ever :) 
+- Server for 
+- HTTP is pretty self-explanatory. 
 
 # Why? How?
 
 It's built as a hobby project also to try out codecrafters platform.  
 It's built entirely in the Go Language.
- 
