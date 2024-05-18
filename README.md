@@ -1,38 +1,15 @@
 [![progress-banner](https://backend.codecrafters.io/progress/http-server/f4c7b30e-a5bb-44bf-bccb-0e6eab4cb094)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
-This is a starting point for Go solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+# T.R.A.S.H -> HTTP Server in Golang
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+- Trash stands for Traditional Raw Amateur Server for HTTP
+Why Traditional, because it is based on [RFC 2616 HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616)
+Raw because it's not looking to be perfect and is full of things to work on and improve
+Amateur because it's my first HTTP Server ever :) 
+Server for HTTP is pretty self-explanatory. 
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
+# Why? How?
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
-
-# Passing the first stage
-
-The entry point for your HTTP server implementation is in `app/server.go`. Study
-and uncomment the relevant code, and push your changes to pass the first stage:
-
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
-
-Time to move on to the next stage!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `go (1.19)` installed locally
-1. Run `./your_server.sh` to run your program, which is implemented in
-   `app/server.go`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+It's built as a hobby project also to try out codecrafters platform.  
+It's built entirely in the Go Language.
+ 
