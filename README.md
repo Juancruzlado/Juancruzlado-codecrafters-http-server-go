@@ -15,8 +15,6 @@ It's built as a hobby project also to try out codecrafters platform.
 It's built entirely in the Go Language. You can run it with:
 ```bash
 go run trash.go
-# or better yet
-./T.R.A.S.H.sh 
 ``` 
 
 - It listens in Port 4221 for TCP connection with the client
@@ -36,6 +34,6 @@ localhost:4221/user-agent
 - It can handle concurrent connections with the use of goroutines
 - You can GET a file from directory with
 ```bash
-./T.R.A.S.H.sh --directory
+curl -i localhost:4221/ --directory
 ```
 - You can POST a file [- To DO -]
