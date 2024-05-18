@@ -22,8 +22,18 @@ go run trash.go
 ```bash
 curl -i localhost:4221/
 ```
-- It returns you your own string that you send via url if you curl this route: localhost:4221/echo/hello - in this example i pick the word hello, use whichever you want.
-- It returns your User-Agent if you go to localhost:4221/user-agent
+- It returns you your own string that you send via url if you curl this route:
+
+ localhost:4221/echo/hello 
+
+  in this example i pick the word hello, use whichever you want.
+- It returns your User-Agent if you go to 
+```bash
+localhost:4221/user-agent
+```
 - It can handle concurrent connections with the use of goroutines
-- You can GET a file from directory with curl -i localhost:4221/ --directory
+- You can GET a file from directory with
+```bash
+curl -i localhost:4221/ --directory
+```
 - You can POST a file [- To DO -]
