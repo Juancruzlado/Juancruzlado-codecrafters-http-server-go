@@ -23,9 +23,9 @@ go run trash.go
 curl -i localhost:4221/
 ```
 - It returns you your own string that you send via url if you curl this route:
-
+```bash
  localhost:4221/echo/hello 
-
+```
   in this example i pick the word hello, use whichever you want.
 - It returns your User-Agent if you go to 
 ```bash
