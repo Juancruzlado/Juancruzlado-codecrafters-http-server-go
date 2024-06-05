@@ -35,7 +35,7 @@ func main() {
 // Metodo que responde con el HTTP Response y el string que quiere imprimir el cliente
 func responseEcho(conn net.Conn, path string, acceptEncoding string) {
 	msg := strings.Split(path, "/")[2]
-	if acceptEncoding == "gzip" {
+	if strings.Contains(acceptEncoding, "gzip") {
 		resp := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
 		conn.Write([]byte(resp))
 	} else {
