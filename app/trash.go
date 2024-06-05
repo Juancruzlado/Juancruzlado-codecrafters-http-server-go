@@ -33,10 +33,15 @@ func main() {
 }
 
 // Metodo que responde con el HTTP Response y el string que quiere imprimir el cliente
-func responseEcho(conn net.Conn, path string) {
+func responseEcho(conn net.Conn, path string, acceptEncoding string) {
 	msg := strings.Split(path, "/")[2]
-	resp := "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
-	conn.Write([]byte(resp))
+	if acceptEncoding == "gzip" {
+		resp := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
+		conn.Write([]byte(resp))
+	} else {
+		resp := "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
+		conn.Write([]byte(resp))
+	}
 }
 
 // Metodo que responde con el HTTP Response y le concatena el Header User-Agent extraido del Request del Cliente 
@@ -54,6 +59,8 @@ func HandleRequest(conn net.Conn, directory *string) {
 	contentLength, err := conn.Read(buffer)
 	if err != nil {
 		fmt.Fprintf(conn, "HTTP/1.1 500 Internal Server Error\r\n\r\n")
+		conn.Close()
+		return
 	}
 
 	content := string(buffer[:contentLength])
@@ -63,6 +70,8 @@ func HandleRequest(conn net.Conn, directory *string) {
 	path := strings.ReplaceAll(startLine[1], " ", "")
 	target := startLine[1]
 	reqParts := strings.Split(target, "/")
+
+	acceptEncoding := getHeaderValue(httpRequest, "Accept-Encoding")
 
 	if method == "POST" && len(reqParts) > 2 && reqParts[1] == "files" {
 		// Stage: Manejo de solicitudes POST para subir archivos
@@ -82,18 +91,25 @@ func HandleRequest(conn net.Conn, directory *string) {
 	// Stage 2 y 3 si el path es / devuelve 200 OK
 	if path == "/" {
 		fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\n\r\n")
+		conn.Close()
 		return
 	} else if strings.HasPrefix(path, "/echo/") {
 		// Stage 4 si el path empieza con /echo/ entonces devuelve el string
-		responseEcho(conn, path)
+		responseEcho(conn, path, acceptEncoding)
+		conn.Close()
+		return
 	} else if path == "/user-agent" {
 		// Stage 5 Si el path es user agent devuelve el header
 		responseUserAgent(conn, content)
+		conn.Close()
+		return
 	} else if len(reqParts) > 2 && reqParts[1] == "files" && checkFileExists(*directory+"/"+reqParts[2]) {
 		// Stage 7 Agregando la capacidad de hacerle un GET a un archivo.
 		fileContents := getFileContents(*directory + "/" + reqParts[2])
 		response := ([]byte("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + fmt.Sprint(len(fileContents)) + "\r\n\r\n" + fileContents))
 		conn.Write(response)
+		conn.Close()
+		return
 	}
 
 	fmt.Fprintf(conn, "HTTP/1.1 404 Not Found\r\n\r\n")
@@ -126,4 +142,15 @@ func extractRequestBody(content string) string {
 		return ""
 	}
 	return parts[1]
+}
+
+// Metodo que obtiene el valor de una cabecera específica
+func getHeaderValue(httpRequest []string, headerName string) string {
+	headerName = strings.ToLower(headerName) + ":"
+	for _, line := range httpRequest {
+		if strings.HasPrefix(strings.ToLower(line), headerName) {
+			return strings.TrimSpace(strings.Split(line, ":")[1])
+		}
+	}
+	return ""
 }
