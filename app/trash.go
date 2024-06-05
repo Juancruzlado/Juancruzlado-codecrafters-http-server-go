@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -35,13 +37,28 @@ func main() {
 // Metodo que responde con el HTTP Response y el string que quiere imprimir el cliente
 func responseEcho(conn net.Conn, path string, acceptEncoding string) {
 	msg := strings.Split(path, "/")[2]
+	var response []byte
+	var err error
+
 	if strings.Contains(acceptEncoding, "gzip") {
-		resp := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
-		conn.Write([]byte(resp))
+		var buffer bytes.Buffer
+		writer := gzip.NewWriter(&buffer)
+		_, err = writer.Write([]byte(msg))
+		if err != nil {
+			fmt.Fprintf(conn, "HTTP/1.1 500 Internal Server Error\r\n\r\n")
+			conn.Close()
+			return
+		}
+		writer.Close()
+		compressedData := buffer.Bytes()
+		response = []byte(fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n", len(compressedData)))
+		response = append(response, compressedData...)
 	} else {
-		resp := "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + fmt.Sprint(len(msg)) + "\r\n\r\n" + msg
-		conn.Write([]byte(resp))
+		response = []byte(fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(msg), msg))
 	}
+
+	conn.Write(response)
+	conn.Close()
 }
 
 // Metodo que responde con el HTTP Response y le concatena el Header User-Agent extraido del Request del Cliente 
