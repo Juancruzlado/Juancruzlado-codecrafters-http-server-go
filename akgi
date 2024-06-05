@@ -1,0 +1,23 @@
+package main
+
+import (
+		"fmt"
+		"net"
+		"os"
+) 
+
+func main(){
+	l, err := net.Listen("tcp", "0.0.0.0:2441")
+	if err != nil {
+		fmt.Println("Error al bindear puerto para le servo", err.Error())
+		os.Exit(1)
+	}
+
+	net, err = l.Accept()
+	if err != nil {
+		fmt.Println("Error al aceptar conexion", err.Error())
+		os.Exit(1)
+	}
+
+	fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\n\r\n")
+}
