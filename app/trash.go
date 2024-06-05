@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -56,11 +57,28 @@ func HandleRequest(conn net.Conn, directory *string) {
 	}
 
 	content := string(buffer[:contentLength])
-	httpRequest := strings.Split(string(buffer), "\r\n")
+	httpRequest := strings.Split(content, "\r\n")
 	startLine := strings.Split(httpRequest[0], " ")
+	method := startLine[0]
 	path := strings.ReplaceAll(startLine[1], " ", "")
 	target := startLine[1]
-	req_parts := strings.Split(target, "/")
+	reqParts := strings.Split(target, "/")
+
+	if method == "POST" && len(reqParts) > 2 && reqParts[1] == "files" {
+		// Stage: Manejo de solicitudes POST para subir archivos
+		filename := reqParts[2]
+		body := extractRequestBody(content)
+		err := ioutil.WriteFile(*directory+"/"+filename, []byte(body), 0644)
+		if err != nil {
+			fmt.Fprintf(conn, "HTTP/1.1 500 Internal Server Error\r\n\r\n")
+			conn.Close()
+			return
+		}
+		fmt.Fprintf(conn, "HTTP/1.1 201 Created\r\n\r\n")
+		conn.Close()
+		return
+	}
+
 	// Stage 2 y 3 si el path es / devuelve 200 OK
 	if path == "/" {
 		fmt.Fprintf(conn, "HTTP/1.1 200 OK\r\n\r\n")
@@ -71,10 +89,10 @@ func HandleRequest(conn net.Conn, directory *string) {
 	} else if path == "/user-agent" {
 		// Stage 5 Si el path es user agent devuelve el header
 		responseUserAgent(conn, content)
-	} else if len(req_parts) > 2 && req_parts[1] == "files" && checkFileExists(*directory+req_parts[2]) {
+	} else if len(reqParts) > 2 && reqParts[1] == "files" && checkFileExists(*directory+"/"+reqParts[2]) {
 		// Stage 7 Agregando la capacidad de hacerle un GET a un archivo.
-		file_contents := getFileContents(*directory + req_parts[2])
-		response := ([]byte("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + fmt.Sprint(len(file_contents)) + "\r\n\r\n" + file_contents))
+		fileContents := getFileContents(*directory + "/" + reqParts[2])
+		response := ([]byte("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + fmt.Sprint(len(fileContents)) + "\r\n\r\n" + fileContents))
 		conn.Write(response)
 	}
 
@@ -93,10 +111,19 @@ func checkFileExists(filename string) bool {
 
 // Metodo que lee los contenidos del archivo y los devuelve en un string.
 func getFileContents(filename string) string {
-	data, err := os.ReadFile(filename)
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println("Error reading file: ", err.Error())
 		os.Exit(1)
 	}
 	return string(data)
+}
+
+// Metodo que extrae el cuerpo de la solicitud POST
+func extractRequestBody(content string) string {
+	parts := strings.Split(content, "\r\n\r\n")
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[1]
 }
